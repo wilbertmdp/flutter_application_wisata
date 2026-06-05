@@ -2,8 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_wisata/firebase_options.dart';
-import 'package:flutter_application_wisata/home_screen.dart';
-import 'package:flutter_application_wisata/sign_in_screen.dart';
+import 'package:flutter_application_wisata/screens/home_screen.dart';
+import 'package:flutter_application_wisata/screens/main_navigation_screen.dart';
+import 'package:flutter_application_wisata/screens/sign_in_screen.dart';
 
 
 
@@ -31,12 +32,11 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      // home: const MyHomePage(title: 'Flutter Demo Home Page'),
       home: StreamBuilder(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            return const HomeScreen();
+            return const MainNavigationScreen();
           } else {
             return const SignInScreen();
           }

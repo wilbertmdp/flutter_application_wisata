@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_wisata/home_screen.dart';
-import 'package:flutter_application_wisata/sign_up_screen.dart';
+import 'package:flutter_application_wisata/screens/main_navigation_screen.dart';
+import 'package:flutter_application_wisata/screens/sign_up_screen.dart';
 
 
 class SignInScreen extends StatefulWidget {
@@ -42,7 +42,7 @@ class _SignInScreenState extends State<SignInScreen> {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
+          builder: (context) => const MainNavigationScreen(),
         ),
         (route) => false,
       );
