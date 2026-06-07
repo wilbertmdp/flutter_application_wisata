@@ -31,12 +31,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
 
   String _selectedCategory = "Beaches";
 
-  final List<String> categories = [
-    "Beaches",
-    "Mountains",
-    "Culinary",
-    "City",
-  ];
+  final List<String> categories = ["Beaches", "Mountains", "Culinary", "City"];
 
   @override
   void dispose() {
@@ -51,8 +46,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Pilih Sumber Gambar'),
-        content: const Text(
-          'Silakan pilih gambar dari kamera atau galeri.'),
+        content: const Text('Silakan pilih gambar dari kamera atau galeri.'),
         actions: [
           TextButton(
             onPressed: () {
@@ -281,8 +275,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
- 
-
                     const SizedBox(height: 28),
 
                     const Text(
@@ -299,7 +291,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                     Text(
                       "Bagikan pengalaman wisata terbaikmu ke pengguna lainnya.",
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontSize: 15,
                       ),
                     ),
@@ -321,7 +313,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                           borderRadius: BorderRadius.circular(28),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.06),
+                              color: Colors.black.withValues(alpha: 0.06),
                               blurRadius: 25,
                               offset: const Offset(0, 10),
                             ),
@@ -364,7 +356,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                                 ),
                                                 decoration: BoxDecoration(
                                                   color: Colors.black
-                                                      .withOpacity(0.4),
+                                                      .withValues(alpha: 0.4),
                                                   borderRadius:
                                                       BorderRadius.circular(14),
                                                 ),
@@ -389,7 +381,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                               boxShadow: [
                                                 BoxShadow(
                                                   color: Colors.black
-                                                      .withOpacity(0.05),
+                                                      .withValues(alpha: 0.05),
                                                   blurRadius: 10,
                                                 ),
                                               ],

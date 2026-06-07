@@ -12,7 +12,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final List<String> categories = ["All", "Beaches", "Mountains", "Culinary", "City"];
+  final List<String> categories = [
+    "All",
+    "Beaches",
+    "Mountains",
+    "Culinary",
+    "City",
+  ];
 
   String selectedCategory = "All";
 
@@ -33,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 12,
                         ),
                       ],
@@ -59,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 12,
                         ),
                       ],
@@ -230,7 +236,7 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 24,
               offset: const Offset(0, 12),
             ),
@@ -252,8 +258,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withOpacity(0.18),
-                      Colors.black.withOpacity(0.75),
+                      Colors.black.withValues(alpha: 0.18),
+                      Colors.black.withValues(alpha: 0.75),
                     ],
                   ),
                 ),
@@ -267,7 +273,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
@@ -284,7 +290,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 right: 20,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                     shape: BoxShape.circle,
                   ),
                   child: const Padding(
@@ -320,14 +326,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(
-                          Icons.star,
-                          color: Colors.amber,
-                          size: 18,
-                        ),
+                        const Icon(Icons.star, color: Colors.amber, size: 18),
                         const SizedBox(width: 6),
                         Text(
-                          '${data['rating'].toString()}',
+                          data['rating'].toString(),
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 14,
@@ -360,7 +362,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
-                            color: Colors.white
+                            color: Colors.white,
                           ),
                         ),
                       ),
@@ -393,7 +395,7 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(22),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 18,
               offset: const Offset(0, 10),
             ),

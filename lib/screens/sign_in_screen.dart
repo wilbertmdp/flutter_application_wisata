@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_wisata/screens/main_navigation_screen.dart';
 import 'package:flutter_application_wisata/screens/sign_up_screen.dart';
 
-
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
 
@@ -41,9 +40,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(
-          builder: (context) => const MainNavigationScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
         (route) => false,
       );
     } on FirebaseAuthException catch (error) {
@@ -58,9 +55,9 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   bool _isValidEmail(String email) {
@@ -100,17 +97,12 @@ class _SignInScreenState extends State<SignInScreen> {
         children: [
           /// Background
           Positioned.fill(
-            child: Image.asset(
-              'assets/signin_image.jpg',
-              fit: BoxFit.cover,
-            ),
+            child: Image.asset('assets/signin_image.jpg', fit: BoxFit.cover),
           ),
 
           /// Overlay
           Positioned.fill(
-            child: Container(
-              color: Colors.black.withOpacity(0.45),
-            ),
+            child: Container(color: Colors.black.withValues(alpha: 0.45)),
           ),
 
           /// Login Card
@@ -118,7 +110,7 @@ class _SignInScreenState extends State<SignInScreen> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Card(
-                color: Colors.white.withOpacity(0.95),
+                color: Colors.white.withValues(alpha: 0.95),
                 elevation: 15,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(25),
@@ -199,8 +191,7 @@ class _SignInScreenState extends State<SignInScreen> {
                               ),
                               onPressed: () {
                                 setState(() {
-                                  _isPasswordVisible =
-                                      !_isPasswordVisible;
+                                  _isPasswordVisible = !_isPasswordVisible;
                                 });
                               },
                             ),
@@ -221,17 +212,14 @@ class _SignInScreenState extends State<SignInScreen> {
                           width: double.infinity,
                           height: 50,
                           child: _isLoading
-                              ? const Center(
-                                  child: CircularProgressIndicator(),
-                                )
+                              ? const Center(child: CircularProgressIndicator())
                               : ElevatedButton(
                                   onPressed: _signIn,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.lightBlue,
                                     foregroundColor: Colors.white,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
                                   child: const Text(

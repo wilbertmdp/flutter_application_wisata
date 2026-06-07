@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_wisata/screens/home_screen.dart';
 
-
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
@@ -31,10 +30,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   void _showErrorMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 
@@ -65,10 +61,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     try {
       final userCredential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-            email: email,
-            password: password,
-          );
+          .createUserWithEmailAndPassword(email: email, password: password);
 
       await FirebaseFirestore.instance
           .collection('users')
@@ -83,9 +76,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
         (route) => false,
       );
     } on FirebaseAuthException catch (error) {
@@ -117,17 +108,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
         children: [
           /// Background Gunung
           Positioned.fill(
-            child: Image.asset(
-              'assets/signin_image.jpg',
-              fit: BoxFit.cover,
-            ),
+            child: Image.asset('assets/signin_image.jpg', fit: BoxFit.cover),
           ),
 
           /// Overlay gelap
           Positioned.fill(
-            child: Container(
-              color: Colors.black.withOpacity(0.45),
-            ),
+            child: Container(color: Colors.black.withValues(alpha: 0.45)),
           ),
 
           /// Form
@@ -135,7 +121,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Card(
-                color: Colors.white.withOpacity(0.95),
+                color: Colors.white.withValues(alpha: 0.95),
                 elevation: 15,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(25),
@@ -234,8 +220,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               ),
                               onPressed: () {
                                 setState(() {
-                                  _isPasswordVisible =
-                                      !_isPasswordVisible;
+                                  _isPasswordVisible = !_isPasswordVisible;
                                 });
                               },
                             ),
@@ -297,17 +282,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           width: double.infinity,
                           height: 50,
                           child: _isLoading
-                              ? const Center(
-                                  child: CircularProgressIndicator(),
-                                )
+                              ? const Center(child: CircularProgressIndicator())
                               : ElevatedButton(
                                   onPressed: _signUp,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.lightBlue,
                                     foregroundColor: Colors.white,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
                                   child: const Text(
