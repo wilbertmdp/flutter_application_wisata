@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -6,16 +8,18 @@ import 'package:flutter_application_wisata/screens/detail_screen.dart';
 import 'package:flutter_application_wisata/screens/edit_profile_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final String? userId; // Optional parameter to view external user profiles
+
+  const ProfileScreen({super.key, this.userId});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  late String _uid;
+  String? _targetUid;
+  bool _isCurrentUser = false;
 
-  // Themed colors for the prettier design
   final Color primaryBlue = const Color(0xFF1A3AFF);
   final Color accentGold = const Color(0xFFC5A059);
   final Color darkBlueText = const Color(0xFF1A237E);
@@ -23,19 +27,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _uid = FirebaseAuth.instance.currentUser!.uid;
+
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+
+    if (currentUid == null && widget.userId == null) {
+      _targetUid = null;
+      _isCurrentUser = false;
+      return;
+    }
+
+    _targetUid = widget.userId ?? currentUid;
+    _isCurrentUser = _targetUid == currentUid;
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_targetUid == null) {
+      return const Scaffold(body: Center(child: Text("User belum login")));
+    }
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          "PROFIL",
-          style: TextStyle(
+        title: Text(
+          _isCurrentUser ? "PROFIL SAYA" : "PROFIL TRAVELER",
+          style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
             letterSpacing: 1.2,
@@ -44,28 +62,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      // Upgraded to StreamBuilder for instant, reactive database updates
-      body: StreamBuilder<DocumentSnapshot>(
+      body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance
             .collection('users')
-            .doc(_uid)
+            .doc(_targetUid)
             .snapshots(),
         builder: (context, userSnapshot) {
           if (userSnapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (userSnapshot.hasError ||
-              !userSnapshot.hasData ||
-              !userSnapshot.data!.exists) {
-            return const Center(child: Text("Gagal memuat data profil"));
+          if (userSnapshot.hasError) {
+            return Center(
+              child: Text("Gagal memuat data profil: ${userSnapshot.error}"),
+            );
           }
 
-          final userData = userSnapshot.data!.data() as Map<String, dynamic>;
+          if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
+            return const Center(child: Text("Data profil tidak ditemukan"));
+          }
+
+          final userData = userSnapshot.data!.data();
+
+          if (userData == null) {
+            return const Center(child: Text("Data profil kosong"));
+          }
+
+          final profileImage = _getProfileImage(userData);
 
           return CustomScrollView(
             slivers: [
-              // 1. BEAUTIFUL DECORATED HEADER AREA
               SliverToBoxAdapter(
                 child: Container(
                   width: double.infinity,
@@ -73,26 +99,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [
-                        primaryBlue.withOpacity(0.8), // Top gradient
-                        Colors.white, // Blends into the main content area
-                      ],
-                      stops: const [0.0, 0.9], // Control gradient blend
+                      colors: [primaryBlue.withOpacity(0.8), Colors.white],
+                      stops: const [0.0, 0.9],
                     ),
                   ),
                   child: Column(
                     children: [
-                      // Space for the transparent AppBar
                       const SizedBox(height: kToolbarHeight + 40),
 
-                      // STYLIZED PROFILE PICTURE CONTAINER
                       Container(
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 6,
-                          ), // Thick white border
+                          border: Border.all(color: Colors.white, width: 6),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.15),
@@ -104,9 +122,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: CircleAvatar(
                           radius: 55,
                           backgroundColor: Colors.blue.shade50,
-                          // Safely handle profile image
-                          backgroundImage: _getProfileImage(userData),
-                          child: _getProfileImage(userData) == null
+                          backgroundImage: profileImage,
+                          child: profileImage == null
                               ? Icon(
                                   Icons.person_pin,
                                   size: 70,
@@ -118,73 +135,81 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                       const SizedBox(height: 20),
 
-                      // USER INFORMATION
-                      Text(
-                        (userData['fullName'] ?? 'Traveler').toUpperCase(),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w900,
-                          color: darkBlueText,
-                          letterSpacing: 0.5,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          (userData['fullName'] ?? 'Traveler')
+                              .toString()
+                              .toUpperCase(),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w900,
+                            color: darkBlueText,
+                            letterSpacing: 0.5,
+                          ),
                         ),
                       ),
 
                       const SizedBox(height: 8),
 
-                      Text(
-                        (userData['bio'] ?? 'Traveler Explorer // Adventurer')
-                            .toUpperCase(),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: primaryBlue,
-                          letterSpacing: 1.0,
-                        ),
-                      ),
-
-                      const SizedBox(height: 25),
-
-                      // MODERN ACTION BUTTON
-                      ElevatedButton(
-                        onPressed: () {
-                          // Open the edit screen cleanly
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const EditProfileScreen(),
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryBlue,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 40,
-                            vertical: 15,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          elevation: 5,
-                        ),
-                        child: const Text(
-                          "EDIT PROFIL",
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          (userData['bio'] ?? 'Traveler Explorer // Adventurer')
+                              .toString()
+                              .toUpperCase(),
+                          textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: primaryBlue,
                             letterSpacing: 1.0,
                           ),
                         ),
                       ),
 
+                      const SizedBox(height: 25),
+
+                      if (_isCurrentUser)
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const EditProfileScreen(),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryBlue,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 40,
+                              vertical: 15,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            elevation: 5,
+                          ),
+                          child: const Text(
+                            "EDIT PROFIL",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                        )
+                      else
+                        const SizedBox(height: 10),
+
                       const SizedBox(height: 35),
 
-                      // 2. THEMED STATISTIK CARDS SECTION
-                      StreamBuilder<QuerySnapshot>(
+                      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                         stream: FirebaseFirestore.instance
                             .collection('posts')
-                            .where('userId', isEqualTo: _uid)
+                            .where('userId', isEqualTo: _targetUid)
                             .snapshots(),
                         builder: (context, postSnapshot) {
                           final totalPosts = postSnapshot.hasData
@@ -201,7 +226,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   "Postingan",
                                 ),
                                 _buildStatCard(
-                                  userData['email']?.split('.').first ?? '-',
+                                  (userData['email'] ?? '-')
+                                      .toString()
+                                      .split('.')
+                                      .first,
                                   "Akun",
                                 ),
                                 _buildStatCard(
@@ -218,7 +246,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 30),
                       const Divider(height: 1),
 
-                      // SECTION TITLE
                       Container(
                         width: double.infinity,
                         color: Colors.white,
@@ -229,7 +256,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            "POSTINGAN SAYA",
+                            _isCurrentUser
+                                ? "POSTINGAN SAYA"
+                                : "POSTINGAN TRAVELER",
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
@@ -239,21 +268,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                       ),
+
                       Container(
                         width: double.infinity,
                         height: 10,
                         color: Colors.white,
-                      ), // Gap spacer
+                      ),
                     ],
                   ),
                 ),
               ),
 
-              // 3. GRID LIST SECTION (Point to White Background Area)
-              StreamBuilder<QuerySnapshot>(
+              StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                 stream: FirebaseFirestore.instance
                     .collection('posts')
-                    .where('userId', isEqualTo: _uid)
+                    .where('userId', isEqualTo: _targetUid)
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -283,7 +312,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     );
                   }
 
-                  final posts = snapshot.data?.docs ?? [];
+                  final posts = snapshot.data?.docs.toList() ?? [];
 
                   if (posts.isEmpty) {
                     return SliverToBoxAdapter(
@@ -302,19 +331,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     );
                   }
 
-                  // CLIENT-SIDE SORTING
                   posts.sort((a, b) {
-                    final aData = a.data() as Map<String, dynamic>;
-                    final bData = b.data() as Map<String, dynamic>;
+                    final aData = a.data();
+                    final bData = b.data();
 
-                    final Timestamp? aTime = aData['createdAt'] as Timestamp?;
-                    final Timestamp? bTime = bData['createdAt'] as Timestamp?;
+                    final aTime = aData['createdAt'];
+                    final bTime = bData['createdAt'];
 
-                    if (aTime == null || bTime == null) return 0;
-                    return bTime.compareTo(aTime);
+                    if (aTime is Timestamp && bTime is Timestamp) {
+                      return bTime.compareTo(aTime);
+                    }
+
+                    return 0;
                   });
 
-                  // Render the Grid
                   return SliverPadding(
                     padding: const EdgeInsets.fromLTRB(15, 0, 15, 20),
                     sliver: SliverGrid(
@@ -326,8 +356,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                       delegate: SliverChildBuilderDelegate((context, index) {
                         final postId = posts[index].id;
-                        final data =
-                            posts[index].data() as Map<String, dynamic>;
+                        final data = posts[index].data();
 
                         return GestureDetector(
                           onTap: () {
@@ -349,13 +378,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                               ],
                               borderRadius: BorderRadius.circular(15),
+                              border: Border.all(color: Colors.grey.shade200),
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(15),
-                              child: Image.memory(
-                                base64Decode(data['image']),
-                                fit: BoxFit.cover,
-                              ),
+                              child: _buildPostImage(data),
                             ),
                           ),
                         );
@@ -371,7 +398,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Modern Stat Card Widget Builder
   Widget _buildStatCard(String value, String label, {bool isGolden = false}) {
     return Container(
       width: 100,
@@ -396,7 +422,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
               color: isGolden ? accentGold : primaryBlue,
             ),
@@ -416,17 +442,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Helper method to safely get profile image
   ImageProvider<Object>? _getProfileImage(Map<String, dynamic> userData) {
     try {
       final profileImage = userData['profileImage'];
-      if (profileImage != null && profileImage.isNotEmpty) {
+
+      if (profileImage is String && profileImage.trim().isNotEmpty) {
         return MemoryImage(base64Decode(profileImage));
       }
     } catch (e) {
-      // Silently fail and show default icon
-      debugPrint('Error loading profile image: $e');
+      debugPrint("Error loading profile image: $e");
     }
+
     return null;
+  }
+
+  Widget _buildPostImage(Map<String, dynamic> data) {
+    try {
+      final image = data['image'];
+
+      if (image is String && image.trim().isNotEmpty) {
+        final Uint8List imageBytes = base64Decode(image);
+
+        return Image.memory(
+          imageBytes,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+          errorBuilder: (context, error, stackTrace) {
+            return _imagePlaceholder();
+          },
+        );
+      }
+    } catch (e) {
+      debugPrint("Error loading post image: $e");
+    }
+
+    return _imagePlaceholder();
+  }
+
+  Widget _imagePlaceholder() {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      color: Colors.grey.shade200,
+      child: Icon(Icons.broken_image, color: Colors.grey.shade500),
+    );
   }
 }
