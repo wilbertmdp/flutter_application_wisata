@@ -1,8 +1,10 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_wisata/screens/detail_screen.dart';
+import 'package:flutter_application_wisata/screens/sign_in_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,6 +23,19 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   String selectedCategory = "All";
+  late TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +60,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     child: IconButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        _showMenuOptions(context);
+                      },
                       icon: const Icon(Icons.menu, color: Color(0xFF1A3AFF)),
                     ),
                   ),
@@ -82,6 +99,10 @@ class _HomeScreenState extends State<HomeScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: TextField(
+                controller: _searchController,
+                onChanged: (value) {
+                  setState(() {});
+                },
                 decoration: InputDecoration(
                   hintText: 'Search destinations, hotels...',
                   prefixIcon: const Icon(Icons.search),
@@ -160,10 +181,27 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   var posts = snapshot.data!.docs;
 
+                  // Filter by category
                   if (selectedCategory != 'All') {
                     posts = posts.where((doc) {
                       final data = doc.data() as Map<String, dynamic>;
                       return data['category'] == selectedCategory;
+                    }).toList();
+                  }
+
+                  // Filter by search query
+                  final searchQuery = _searchController.text.toLowerCase();
+                  if (searchQuery.isNotEmpty) {
+                    posts = posts.where((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      final title = (data['title'] ?? '')
+                          .toString()
+                          .toLowerCase();
+                      final location = (data['locationName'] ?? '')
+                          .toString()
+                          .toLowerCase();
+                      return title.contains(searchQuery) ||
+                          location.contains(searchQuery);
                     }).toList();
                   }
 
@@ -511,5 +549,52 @@ class _HomeScreenState extends State<HomeScreen> {
       default:
         return 'Recommended';
     }
+  }
+
+  void _showMenuOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ListTile(
+                leading: const Icon(Icons.logout, color: Colors.red),
+                title: const Text(
+                  'Logout',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await FirebaseAuth.instance.signOut();
+                  if (mounted) {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (_) => const SignInScreen()),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
