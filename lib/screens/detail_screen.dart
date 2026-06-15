@@ -19,6 +19,11 @@ class DetailScreen extends StatefulWidget {
 }
 
 class _DetailScreenState extends State<DetailScreen> {
+  @override
+void initState() {
+  super.initState();
+  _checkSavedStatus();
+}
   final TextEditingController _commentController = TextEditingController();
 
   bool _isSending = false;
@@ -28,6 +33,8 @@ class _DetailScreenState extends State<DetailScreen> {
   final Color darkBlueText = const Color(0xFF1A237E);
 
   @override
+  bool _isSaved = false;
+  bool _isCheckingSaved = true;
   void dispose() {
     _commentController.dispose();
     super.dispose();
@@ -127,7 +134,93 @@ class _DetailScreenState extends State<DetailScreen> {
       }
     }
   }
+  Future<void> _checkSavedStatus() async {
+  final user = FirebaseAuth.instance.currentUser;
 
+  if (user == null) {
+    setState(() {
+      _isCheckingSaved = false;
+    });
+    return;
+  }
+
+  final doc = await FirebaseFirestore.instance
+      .collection('users')
+      .doc(user.uid)
+      .collection('favorites')
+      .doc(widget.postId)
+      .get();
+
+  if (!mounted) return;
+
+  setState(() {
+    _isSaved = doc.exists;
+    _isCheckingSaved = false;
+  });
+}
+  Future<void> _toggleSaved() async {
+  final user = FirebaseAuth.instance.currentUser;
+
+  if (user == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Silakan login terlebih dahulu"),
+      ),
+    );
+    return;
+  }
+
+  try {
+    final favoriteRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('favorites')
+        .doc(widget.postId);
+
+    if (_isSaved) {
+      await favoriteRef.delete();
+
+      if (!mounted) return;
+
+      setState(() {
+        _isSaved = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Dihapus dari Saved"),
+        ),
+      );
+    } else {
+      await favoriteRef.set({
+        'postId': widget.postId,
+        'title': widget.data['title'],
+        'image': widget.data['image'],
+        'locationName': widget.data['locationName'],
+        'rating': widget.data['rating'],
+        'savedAt': Timestamp.now(),
+      });
+
+      if (!mounted) return;
+
+      setState(() {
+        _isSaved = true;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Ditambahkan ke Saved"),
+        ),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Error: $e"),
+      ),
+    );
+  }
+}
   @override
   Widget build(BuildContext context) {
     final String title = _getString('title', fallback: 'Tanpa Judul');
@@ -149,14 +242,29 @@ class _DetailScreenState extends State<DetailScreen> {
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 320,
-            pinned: true,
-            backgroundColor: primaryBlue,
-            iconTheme: const IconThemeData(color: Colors.white),
-            flexibleSpace: FlexibleSpaceBar(
-              background: Hero(tag: widget.postId, child: _buildMainImage()),
-            ),
-          ),
+  expandedHeight: 320,
+  pinned: true,
+  backgroundColor: primaryBlue,
+  iconTheme: const IconThemeData(color: Colors.white),
+
+  actions: [
+    IconButton(
+  onPressed: _isCheckingSaved ? null : _toggleSaved,
+  icon: Icon(
+    _isSaved
+        ? Icons.bookmark
+        : Icons.bookmark_border,
+  ),
+),
+  ],
+
+  flexibleSpace: FlexibleSpaceBar(
+    background: Hero(
+      tag: widget.postId,
+      child: _buildMainImage(),
+    ),
+  ),
+),
 
           SliverToBoxAdapter(
             child: Padding(

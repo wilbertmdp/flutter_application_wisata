@@ -333,7 +333,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   child: const Padding(
                     padding: EdgeInsets.all(8.0),
-                    child: Icon(Icons.favorite_border, color: Colors.redAccent),
+                    child: Icon(Icons.bookmark_border, color: Colors.redAccent),
                   ),
                 ),
               ),

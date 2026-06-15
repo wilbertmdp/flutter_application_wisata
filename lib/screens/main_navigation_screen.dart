@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_wisata/screens/add_post_screen.dart';
 import 'package:flutter_application_wisata/screens/home_screen.dart';
 import 'package:flutter_application_wisata/screens/profile_screen.dart';
+import 'package:flutter_application_wisata/screens/saved_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -16,14 +17,12 @@ class _MainNavigationScreenState
       
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [
-    const HomeScreen(),
-    const Center(
-      child: Text("Saved Screen"),
-    ),
-    const AddPostScreen(),
-    const ProfileScreen(),
-  ];
+final List<Widget> _pages = [
+  const HomeScreen(),
+  const SavedScreen(),
+  const AddPostScreen(),
+  const ProfileScreen(),
+];
 
   @override
   Widget build(BuildContext context) {
