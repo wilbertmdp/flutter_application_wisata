@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_wisata/screens/detail_screen.dart';
 import 'package:flutter_application_wisata/screens/sign_in_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_application_wisata/providers/bookmark_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -303,38 +305,30 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               Positioned(
-                left: 20,
-                top: 20,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text(
-                    _getCategoryTag(data['category'] as String),
-                    style: const TextStyle(
-                      color: Colors.black87,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
                 top: 20,
                 right: 20,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.85),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Icon(Icons.bookmark_border, color: Colors.redAccent),
-                  ),
+                child: Consumer<BookmarkProvider>(
+                  builder: (context, bookmarkProvider, child) {
+                    final isSaved = bookmarkProvider.isBookmarked(doc.id);
+                    return GestureDetector(
+                      onTap: () {
+                        bookmarkProvider.toggleBookmark(doc.id, data);
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.85),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Icon(
+                            isSaved ? Icons.bookmark : Icons.bookmark_border,
+                            color: isSaved ? const Color(0xFF1A3AFF) : Colors.grey,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
               Positioned(
@@ -476,7 +470,20 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Icon(Icons.bookmark_border, color: Colors.grey),
+                        Consumer<BookmarkProvider>(
+                          builder: (context, bookmarkProvider, child) {
+                            final isSaved = bookmarkProvider.isBookmarked(doc.id);
+                            return GestureDetector(
+                              onTap: () {
+                                bookmarkProvider.toggleBookmark(doc.id, data);
+                              },
+                              child: Icon(
+                                isSaved ? Icons.bookmark : Icons.bookmark_border,
+                                color: isSaved ? const Color(0xFF1A3AFF) : Colors.grey,
+                              ),
+                            );
+                          },
+                        ),
                       ],
                     ),
                     const SizedBox(height: 6),

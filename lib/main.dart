@@ -5,12 +5,21 @@ import 'package:flutter_application_wisata/firebase_options.dart';
 import 'package:flutter_application_wisata/screens/main_navigation_screen.dart';
 import 'package:flutter_application_wisata/screens/sign_in_screen.dart';
 import 'package:flutter_application_wisata/screens/splash_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_application_wisata/providers/bookmark_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => BookmarkProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

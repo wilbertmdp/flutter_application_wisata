@@ -4,8 +4,10 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_wisata/providers/bookmark_provider.dart';
 import 'package:flutter_application_wisata/screens/profile_screen.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DetailScreen extends StatefulWidget {
@@ -22,7 +24,6 @@ class _DetailScreenState extends State<DetailScreen> {
   @override
 void initState() {
   super.initState();
-  _checkSavedStatus();
 }
   final TextEditingController _commentController = TextEditingController();
 
@@ -33,8 +34,6 @@ void initState() {
   final Color darkBlueText = const Color(0xFF1A237E);
 
   @override
-  bool _isSaved = false;
-  bool _isCheckingSaved = true;
   void dispose() {
     _commentController.dispose();
     super.dispose();
@@ -134,93 +133,7 @@ void initState() {
       }
     }
   }
-  Future<void> _checkSavedStatus() async {
-  final user = FirebaseAuth.instance.currentUser;
 
-  if (user == null) {
-    setState(() {
-      _isCheckingSaved = false;
-    });
-    return;
-  }
-
-  final doc = await FirebaseFirestore.instance
-      .collection('users')
-      .doc(user.uid)
-      .collection('favorites')
-      .doc(widget.postId)
-      .get();
-
-  if (!mounted) return;
-
-  setState(() {
-    _isSaved = doc.exists;
-    _isCheckingSaved = false;
-  });
-}
-  Future<void> _toggleSaved() async {
-  final user = FirebaseAuth.instance.currentUser;
-
-  if (user == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Silakan login terlebih dahulu"),
-      ),
-    );
-    return;
-  }
-
-  try {
-    final favoriteRef = FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .collection('favorites')
-        .doc(widget.postId);
-
-    if (_isSaved) {
-      await favoriteRef.delete();
-
-      if (!mounted) return;
-
-      setState(() {
-        _isSaved = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Dihapus dari Saved"),
-        ),
-      );
-    } else {
-      await favoriteRef.set({
-        'postId': widget.postId,
-        'title': widget.data['title'],
-        'image': widget.data['image'],
-        'locationName': widget.data['locationName'],
-        'rating': widget.data['rating'],
-        'savedAt': Timestamp.now(),
-      });
-
-      if (!mounted) return;
-
-      setState(() {
-        _isSaved = true;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Ditambahkan ke Saved"),
-        ),
-      );
-    }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Error: $e"),
-      ),
-    );
-  }
-}
   @override
   Widget build(BuildContext context) {
     final String title = _getString('title', fallback: 'Tanpa Judul');
@@ -247,16 +160,31 @@ void initState() {
   backgroundColor: primaryBlue,
   iconTheme: const IconThemeData(color: Colors.white),
 
-  actions: [
-    IconButton(
-  onPressed: _isCheckingSaved ? null : _toggleSaved,
-  icon: Icon(
-    _isSaved
-        ? Icons.bookmark
-        : Icons.bookmark_border,
+actions: [
+  Consumer<BookmarkProvider>(
+    builder: (context, bookmarkProvider, child) {
+      final isSaved = bookmarkProvider.isBookmarked(widget.postId);
+      return IconButton(
+        onPressed: () {
+          bookmarkProvider.toggleBookmark(widget.postId, widget.data);
+          
+          // Opsional: Berikan feedback SnackBar
+          ScaffoldMessenger.of(context).clearSnackBars();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(isSaved ? "Dihapus dari Saved" : "Ditambahkan ke Saved"),
+              duration: const Duration(seconds: 1),
+            ),
+          );
+        },
+        icon: Icon(
+          isSaved ? Icons.bookmark : Icons.bookmark_border,
+          color: Colors.white,
+        ),
+      );
+    },
   ),
-),
-  ],
+],
 
   flexibleSpace: FlexibleSpaceBar(
     background: Hero(
