@@ -40,7 +40,7 @@ void initState() {
   }
 
   Future<void> _openGoogleMaps() async {
-    final String location = _getLocationName();
+    final String location = _getString('title', fallback: 'Tanpa Judul');
 
     if (location.trim().isEmpty || location == 'Lokasi tidak tersedia') {
       ScaffoldMessenger.of(
