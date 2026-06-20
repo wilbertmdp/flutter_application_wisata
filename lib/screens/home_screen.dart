@@ -25,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   String selectedCategory = "All";
+  bool showAllPosts = false;
   late TextEditingController _searchController;
 
   @override
@@ -215,7 +216,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   final featuredPost = posts.first;
                   final popularPosts = posts.length > 1
-                      ? posts.sublist(1, posts.length.clamp(1, 4))
+                      ? posts.sublist(
+                          1,
+                          showAllPosts
+                              ? posts.length
+                              : posts.length.clamp(1, 4),
+                        )
                       : <QueryDocumentSnapshot>[];
 
                   return ListView(
@@ -234,10 +240,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const Spacer(),
                           TextButton(
-                            onPressed: () {},
-                            child: const Text(
-                              'See All',
-                              style: TextStyle(
+                            onPressed: () {
+                              setState(() {
+                                showAllPosts = !showAllPosts;
+                              });
+                            },
+                            child: Text(
+                              showAllPosts ? 'Show Less' : 'See All',
+                              style: const TextStyle(
                                 color: Color(0xFF1A3AFF),
                                 fontWeight: FontWeight.w600,
                               ),
@@ -323,7 +333,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           padding: const EdgeInsets.all(8.0),
                           child: Icon(
                             isSaved ? Icons.bookmark : Icons.bookmark_border,
-                            color: isSaved ? const Color(0xFF1A3AFF) : Colors.grey,
+                            color: isSaved
+                                ? const Color(0xFF1A3AFF)
+                                : Colors.grey,
                           ),
                         ),
                       ),
@@ -338,9 +350,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'RECOMMENDED',
-                      style: TextStyle(
+                    Text(
+                      (data['category'] ?? 'WISATA').toString().toUpperCase(),
+                      style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 12,
                         letterSpacing: 1.5,
@@ -472,14 +484,20 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(width: 8),
                         Consumer<BookmarkProvider>(
                           builder: (context, bookmarkProvider, child) {
-                            final isSaved = bookmarkProvider.isBookmarked(doc.id);
+                            final isSaved = bookmarkProvider.isBookmarked(
+                              doc.id,
+                            );
                             return GestureDetector(
                               onTap: () {
                                 bookmarkProvider.toggleBookmark(doc.id, data);
                               },
                               child: Icon(
-                                isSaved ? Icons.bookmark : Icons.bookmark_border,
-                                color: isSaved ? const Color(0xFF1A3AFF) : Colors.grey,
+                                isSaved
+                                    ? Icons.bookmark
+                                    : Icons.bookmark_border,
+                                color: isSaved
+                                    ? const Color(0xFF1A3AFF)
+                                    : Colors.grey,
                               ),
                             );
                           },
@@ -527,10 +545,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                         Text(
-                          'Flights only',
+                          data['category'] ?? '-',
                           style: TextStyle(
                             color: Colors.grey.shade500,
                             fontSize: 12,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
